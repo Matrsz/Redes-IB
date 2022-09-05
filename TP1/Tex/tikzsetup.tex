@@ -1,0 +1,18 @@
+\usetikzlibrary{math}
+\tikzmath{\D = 3.5; \H = 1.5;}
+\tikzmath{\W = 5.5; \L=0.25*\D;}
+
+\def\txrxlink{
+    +(-0.04*\D, 0) node[rectangle, draw, style={fill=white}]{\textbf T}
+    +( 1.04*\D, 0) node[rectangle, draw, style={fill=white}]{\textbf R}
+}
+
+\def\rarrow{
+    [->] +(\D*0.03, \H*0.3) -- +(\H*0.5, \H*0.3)
+}
+
+\definecolor{Navy}{rgb}{0.15,0.25,0.45}
+
+\setcounter{page}{1}
+\pagestyle{fancy}
+\thispagestyle{fancy}

@@ -1,0 +1,62 @@
+\usepackage{tikz}
+\usepackage{fontenc}
+\usepackage{graphicx}
+\usepackage{authblk}
+\usepackage{fancyhdr}
+\usepackage{titling}
+\usepackage{subcaption}
+\usepackage{booktabs}
+
+\lhead{Redes de Información}
+\chead{}
+\rhead{Ingeniería en Telecomunicaciones}
+\lfoot{M. Roqueta}
+\cfoot{Instituto Balseiro} 
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt} 
+\renewcommand{\footrulewidth}{0.4pt} 
+
+\pretitle{\vspace{-28bp}\fontsize{18bp}{18bp}\selectfont}
+\posttitle{\par\vspace{12bp}}
+\preauthor{\fontsize{14bp}{14bp}\selectfont}
+\postauthor{ - Instituto Balseiro, Centro Atómico Bariloche\par\vspace{12bp}\hrule}
+\predate{}
+\postdate{}
+
+\newenvironment{cols}[1][]{}{}
+
+\newenvironment{col}[1]{\begin{minipage}{#1}\ignorespaces}{%
+\end{minipage}
+\ifhmode\unskip\fi
+\aftergroup\useignorespacesandallpars}
+
+\def\useignorespacesandallpars#1\ignorespaces\fi{%
+#1\fi\ignorespacesandallpars}
+
+\makeatletter
+\def\ignorespacesandallpars{%
+  \@ifnextchar\par
+    {\expandafter\ignorespacesandallpars\@gobble}%
+    {}%
+}
+\makeatother
+
+\makeatletter
+\let\oldlt\longtable
+\let\endoldlt\endlongtable
+\def\longtable{\@ifnextchar[\longtable@i \longtable@ii}
+\def\longtable@i[#1]{\begin{figure}[]
+\onecolumn
+\begin{minipage}{0.5\textwidth}
+\oldlt[#1]
+}
+\def\longtable@ii{\begin{figure}[]
+\onecolumn
+\begin{minipage}{0.5\textwidth}
+\oldlt
+}
+\def\endlongtable{\endoldlt
+\end{minipage}
+\twocolumn
+\end{figure}}
+\makeatother

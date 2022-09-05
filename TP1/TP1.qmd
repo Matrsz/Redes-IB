@@ -1,0 +1,332 @@
+---
+title: Redes de Información - TP N°1
+subtitle: Redes de Información
+author: Matías Roqueta
+institute: Instituto Balseiro
+lang: es
+bibliography: Tex/TP1.bib
+biblio-style: ieee
+highlight-style: arrow
+format: 
+  pdf:
+    fontfamily: libertinus
+    pdf-engine: lualatex
+    include-in-header: Tex/headers.tex
+    include-before-body: Tex/tikzsetup.tex
+    cite-method: biblatex
+    classoption: twocolumn
+    geometry:
+      - top=20mm
+      - bottom=20mm
+      - left=12mm
+      - right=12mm
+    tbl-cap-location: bottom
+    latex-auto-install: true
+jupyter: julia-1.8 
+---
+
+``` {julia}
+#| echo: false
+#| output: false
+using Markdown
+using Plots, ColorSchemes
+pyplot()
+default(fontfamily="serif", titlefontsize=10, labelfontsize=10, legendfontsize=10, palette=:seaborn_deep6, size=(420, 260))
+```
+# Introducción
+
+### Performance
+
+La _performance_ de un sistema cliente-servidor está fuertemente influenciada por dos características principales de la red:
+
+- Ancho de banda: Cuántos bits por segundo puede transportar el sistema.
+
+- Latencia: Cuántos segundos tarda el cliente en recibit el primer bit del servidor.
+
+Un ejemplo de una conexión con alto ancho de banda pero alta latencia es una conexión de internet satelital, mientras que una conexión con baja latencia pero bajo ancho de banda es una conexión por puerto USB. 
+
+### Jerarquía de Protocolos
+
+Suponer un sistema con una jerarquía de protocolos de $N$ capas, en el que las aplicaciones generan mensajes con una longitud de $M$ bytes, y en cada una de las capas se agrega un encabezado de $h$ bytes, tal como se esquematiza en la @fig-capas.
+
+![Esquema de jerarquía de protocolos de $N$ capas.](Images/Fig0.tex){#fig-capas}
+
+El mensaje final cuenta con $M$ bytes de mensaje y un encabezado de $N \times h$ bytes para total de $N \times H + M$ bytes transmitidos.
+
+Esto resulta en una fracción
+
+$$
+\epsilon = \frac{N \times h}{N \times h + M}
+$$
+
+del ancho de banda de la red ocupado por los encabezados.
+
+### Modelo OSI
+
+¿Cuál de las capas OSI maneja los siguientes aspectos?
+
+- Dividir en tramas el flujo de bits transmitidos.
+  - Es responsabilidad de la capa de enlace.
+
+
+- Determinar la ruta que se utilizará a través de la subred.
+  - Es responsabilidad de la capa de transporte.
+
+### TCP y UDP
+
+TCP (Transmission Control Protocol) y UDP (User Datagram Protocol) son los dos protocolos principales de la capa de transporte, en @tanenbaum_6 se detallan sus diferencias. 
+
+UDP es un protocolo sin conexión y es extremadamente simple, hace poco más que envíar datagramas entre aplicaciones. 
+
+Por otra parte, TCP es un protocolo orientado a conexión que hace varias cosas, incluyendo establecer conexiones y proporcionar control de errores por medio de retransmisiones, además de aportar control de flujo y de congestionamiento.
+
+### Modelos de Capas Generales
+
+Suponga que se cambian los algoritmos utilizados para implementar las operaciones en la capa $k$. ¿Cómo impacta esto a las capas $k-1$ y $k + 1$?
+
+Las capas $k-1$ y $k+1$ no se ven afectadas en lo absoluto. 
+
+Suponga que hay un cambio en el servicio (conjunto de operaciones) proporcionado por la capa $k$. ¿Cómo impacta esto a las capas $k-1$ y $k + 1$? 
+
+En este caso la capa $k-1$ sigue sin verse afectada, pero la capa $k+1$ si, ya que el servicio de la capa $k$ constituye la interfaz entre esta y la capa $k+1$. 
+
+
+### Velocidad de Transmisión
+
+Consideramos la transmisión de una imágen de $1024\times 768$ pixeles con $3$ bytes/pixel. La imagen contiene un total de $1024\times 768 \times 3 \times 8 = 825165824$ bits de información. 
+
+Comparamos el tiempo que tarda transmitirla sobre un canal de 56 kbps, un módem de cable de 1 Mbps, una red Ethernet a 10 Mbps, y una red Ethernet a 100 Mbps[^1], registrados en la @tbl-bps.
+
+[^1]: Factores de conversión: $1\text{ kbps} = 1024\text{ bps}$; $1\text{ Mbps} = 1024\text{ kbps}$.
+
+```{julia}
+#| echo: false
+N = 1024*768*3*8
+Markdown.parse("""
+| Medio | Velocidad de Tx| Tiempo |
+| :-- | :-: | :-: |
+| Canal Arbitrario | 56 kbps | $(round(N/(56*1024))|>Int) s|
+| Módem de Cable | 1 Mbps | $(round(N/(1024^2)) |> Int) s|
+| Ethernet | 10 Mbps | $(round(N/(10*1024^2), digits=2)) s|
+| Ethernet | 100 Mbps | $(round(N/(100*1024^2)*1e3)|>Int) ms|
+: Tiempo de transmisión de la imágen por diferentes medios. {#tbl-bps}
+""")
+```
+
+# Capa Física
+
+### Fibra Óptica
+
+La fibra óptica hoy es el medio de transmisión principal en aplicaciones _long haul_ y en redes LAN de alta velocidad, presenta varias ventajes sobre enlaces de cobre, detalladas en @tanenbaum_2
+
+- Mayor tasa de bits, 100 Gbps en contraste con los 45 Gbps de una de línea telefónica.
+
+- Tasa de error efectivamente despreciable respecto a la tasa del órden de $10^{-5}$ del cobre.
+
+- Ancho de banda en exceso de los 50 Tbps, efectívamente infinito respecto a los límites prácticos. 
+
+Sin embargo, también se detallan los inconvenientes de la fibra respecto al cobre
+
+- Alto costo de instalación, en particular en la 'última milla' para aplicaciones domésticas.
+
+- Mayor costo energético en la transmisión, en exceso del costo del procesamiento de los mismos. 
+
+### Tecnologías de Acceso
+
+Las tecnologías de acceso son aquellas plataformas que permiten a un usuario establecer conexión con un proveedor de internet. En @tanenbaum_2 se detallan, entre otras, las siguientes tecnologías de acceso
+
+- Par Trenzado (UTP): Existen varias categorías, según el uso sea doméstico o empresarial.
+- Cable Coaxial: Típicamente de uso doméstico en redes metropolitanas, empleando infraestructura anteriormente usada por la línea telefónica.
+- Fibra Óptica: Típicamente de uso empresarial en redes LAN de alta velocidad.
+- Radiofrecuencia: Usada en redes de acceso inalámbrico de área amplia. 
+- Microondas: Usadas con recepción y transmisión por antenas parabólicas en uso doméstico. 
+
+### Comunicación Satelital
+
+El tiempo de tránsito de extremo a extremo en el mejor caso de un satélite orbitando a una altura $h$ está dado por la @eq-tiempo
+
+$$
+  \tau = \frac{2h}{c}
+$$ {#eq-tiempo}
+
+```{julia}
+#| echo: false
+c = 2.99792458e5
+h = 40000
+leo = 750
+meo = 18000
+geo = 35800
+
+t(h) = 2*h/c
+Markdown.parse("""
+Por ejemplo, para un sistema cliente-servidor usando una red satelital a una altura de $h km, el tiempo de respuesta extremo a extremo es de $(round(t(h)*1e3) |> Int) ms.
+""")
+```
+
+![Diagrama a escala de satélites en órbitas terrestres.](Images/Sat.tex){#fig-sat}
+
+Generalizado a las órbitas LEO, MEO, y GEO detalladas en la @fig-sat, se obtienen los siguientes tiempos de respuesta. 
+
+:::::: {.cols data-latex=""}
+
+::: {.col data-latex="{0.33\linewidth}"}
+```{julia}
+#| echo: false
+Markdown.parse("- GEO: $(round(t(geo)*1e3, sigdigits=2) |> Int) ms")
+```
+:::
+
+::: {.col data-latex="{0.33\linewidth}"}
+```{julia}
+#| echo: false
+Markdown.parse("- MEO: $(round(t(meo)*1e3) |> Int) ms")
+```
+:::
+
+::: {.col data-latex="{0.33\linewidth}"}
+```{julia}
+#| echo: false
+Markdown.parse("- LEO: $(round(t(leo)*1e3) |> Int) ms")
+```
+:::
+::::::
+
+### Topologías de Red
+
+Se comparan las redes de conmutación de paquetes de $N$ nodos con las topologías presentadas en la @fig-redes
+
+- Topología 1: Estrella con un switch central
+- Topología 2: Anillo bidireccional
+- Topología 3: Totalmente interconectada
+
+
+::: {#fig-redes layout-ncol="3"}
+
+``` {dot}
+//| fig-width: 1.15
+//| fig-cap: Topología 1
+
+  graph {
+    layout=circo
+    node [label="" shape=circle]    
+    g -- {a b c d e f};
+  }
+```
+
+``` {dot}
+//| fig-width: 1.15
+//| fig-cap: Topología 2
+  graph {
+    layout=circo
+    node [label="" shape=circle]    
+    a -- b -- c -- d -- e -- f -- a;
+  }
+```
+
+``` {dot}
+//| fig-width: 1.15
+//| fig-cap: Topología 3
+  graph {
+    layout=circo
+    node [label="" shape=circle]    
+    a -- {b c d e f};
+    b -- {c d e f};
+    c -- {d e f};
+    d -- {e f};
+    e -- f;
+  }
+```
+
+Topologías de red a analizar
+::: 
+
+De ellas se comparan la ruta de transmisión en el mejor caso, peor caso, y promedio. Se considera $N$ par (los resultados para N impar serán similares), estos resultados se registran en la @tbl-redes.
+
+| | Mejor Caso | Peor Caso | Promedio
+| --- | :--: | :--: | :--: |
+| Topología 1 | $2$| $2$ | $2$ |
+| Topología 2 | $1$| $\frac N 2$ | $\frac{N+2}{4}$ |
+| Topología 3 | $1$ | $1$ | $1$ |
+
+: Comparación de longitudes de ruta para las topologías de red de la @fig-redes {#tbl-redes}
+
+El cálculo de la longitud promedio de la Topología 2 proviene de la @eq-promedio
+$$
+\overline{n}= \frac 2 N \sum_{i=1}^{N/2} i = \frac{2}{N} \frac{ N^2/4 + N/2}{2} = \frac{N+2}{4}
+$$ {#eq-promedio}
+
+
+# Capa de Enlace
+
+### Longitud de un Enlace
+
+El _bit length of a link_, o longitud del enlace en bits según es definido en @stallings_7 es el número de bits presente en el enlace en un instante en el que la trama de bits transmitida ocupa totalmente el enlace.
+
+Es determinado por la ecuación
+$$
+  B = R \times \frac d V
+$$ {#eq-bitlength}
+En donde 
+
+- $B$: longitud del enlace en bits
+- $R$: tasa de bits del enlace, en bits/segundo
+- $d$: distancia del enlace, en metros
+- $V$: velocidad de propagación, en metros/segundo
+
+El factor $a$ definido por la @eq-factora expresa el retardo de propagación, que es el tiempo que tarda un bit en viajar del emisor al receptor. 
+$$
+a = \frac B L
+$$ {#eq-factora}
+En donde 
+
+- $a$: retardo de propagación normalizado
+- $B$: longitud del enlace en bits
+- $L$: número de bits en la trama.
+
+Esto es normalizado respecto al _tiempo de transmisión_, que es el tiempo que tarda el emisor en transmitir una trama. Por normalización el tiempo de transmisión vale 1.
+
+Un factor $a>1$ resulta en una ineficiencia del enlace, que es ilustrado en la @fig-delay
+
+::: {#fig-delay layout-ncol=2}
+
+![Enlace con retardo $a<1$.](Images/Fig1.tex){#fig-delay1}
+
+![Enlace con retardo $a>1$.](Images/Fig2.tex){#fig-delay2}
+
+Propagación de una trama completa transmitida en el instante $t_0$ en enlaces con diferentes retardos de propagación respecto al tiempo de transmisión.
+:::
+
+En la @fig-delay1 se observa que el enlace es utilizado en su totalidad durante la transmisión de la trama. En contraste con la @fig-delay2 donde canal permanece ocioso durante parte de la transmisión, resultando en un enlace ineficiente.
+
+A partir de la @eq-bitlength se puede determinar, por ejemplo la distancia física $d$ de una línea que permite mantener determinada longitud en bits $B$ a determinada velocidad de propagación $V$ en función de la velocidad de transmisión $R$.
+
+$$
+d = \frac{B \times V}{R}
+$$ {#eq-laultima}
+
+Esta expresión se evalúa en los rangos en los que opera el protocolo Ethernet, obteniendo la @fig-d1 y la @fig-d2.
+
+```{julia}
+#| echo: false
+#| label: fig-d1
+#| fig-cap: Longitud de un enlace de 1000 bits en el rango de velocidades de transmisión $[10\text{ Mbps}, 10\text{ Gbps}]$.
+V = 2e8
+B = 1000
+
+d(R) = B*V/R
+R = 10 .^(range(7, 10,length=1000))
+
+plot(R, d.(R).*1e-3, xaxis=:log, xticks=([1e7, 1e8, 1e9, 1e10], ["10 Mbps", "100 Mbps", "1 Gbps", "10 Gbps"]), xlabel="Velocidad de Transmisión [bps]", ylims=(-1, 21), ylabel="Longitud Fisica [km]", legend=false, title="Longitud Física de un Enlace de 1000 bits")
+```
+
+```{julia}
+#| echo: false
+#| label: fig-d2
+#| fig-cap: Longitud de un enlace de 1000 bits en el rango de velocidades de transmisión $[1\text{ Gbps}, 10\text{ Gbps}]$.
+R = 10 .^(range(9, 10,length=1000))
+
+plot(R, d, xaxis=:log, xticks=([1e9, 1e10], ["1 Gbps", "10 Gbps"]), xlabel="Velocidad de Transmisión [bps]", ylims=(-10, 210), ylabel="Longitud Fisica [m]", legend=false, title="Longitud Física de un Enlace de 1000 bits")
+```
+<!--
+Según implica la figura @fig-delay, el área debajo de las curvas trazadas en la @fig-delay1 y @fig-delay2 representa el espacio en donde tramas de 1000 bits se pueden transmitir haciendo uso eficiente del enlace.
+-->

@@ -1,0 +1,14 @@
+\tikzmath{\scale=0.14; \R=5.5*\scale; \LEO=\R+1.2*\scale; \MEO=\R+18*\scale; \GEO=\R+35.8*\scale;}
+\begin{center}
+    \resizebox{0.6\linewidth}{!}{
+        \begin{tikzpicture}
+        \draw [dashed] ({\GEO*cos(-8)}, {\GEO*sin(-8)}) arc (-8:102:\GEO);
+        \draw [->, thin] (0, 0) -- ({\GEO*cos(8*90/8)}, {\GEO*sin(8*90/8)}) node[label={above right: GEO: 35800 km}]{};
+        \draw [dashed] ({\MEO*cos(-12)}, {\MEO*sin(-12)}) arc (-12:105:\MEO);
+        \draw [->, thin] (0, 0) -- ({\MEO*cos(2*90/4)}, {\MEO*sin(2*90/4)})node[label={right: MEO: 18000 km}]{};
+        \draw [dashed] ({\LEO*cos(-30)}, {\LEO*sin(-30)}) arc (-30:120:\LEO);
+        \draw [->, thin] (0, 0) -- ({\LEO*cos(0*90/8)}, {\LEO*sin(0*90/8)})node[label={right: LEO: 750 km}]{};
+        \draw [Navy, fill=Navy] (0,0) circle(\R);
+        \end{tikzpicture}
+    }
+\end{center}
